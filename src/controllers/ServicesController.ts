@@ -6,8 +6,13 @@ class ServicesController {
     async show(request: Request, response: Response) {
         try {
            const services = await sql.default`
-            select * from services
+               SELECT services.subject, services.description, services.status, category.name AS category_name, levels.name AS levels_name
+                FROM services 
+                INNER JOIN category ON services.category_id = category.id
+                INNER JOIN levels ON services.priority_level_id = levels.id
            `
+
+           console.log(services)
 
            return response.status(200).json(services)   
         } catch (error) {
