@@ -6,10 +6,22 @@ class ServicesController {
     async show(request: Request, response: Response) {
         try {
            const services = await sql.default`
-               SELECT services.subject, services.description, services.status, category.name AS category_name, levels.name AS levels_name
-                FROM services 
-                INNER JOIN category ON services.category_id = category.id
-                INNER JOIN levels ON services.priority_level_id = levels.id
+              SELECT 
+    services.subject, 
+    services.description, 
+    services.status, 
+    category.name AS category_name, 
+    customer.name AS customer_name, 
+    levels.name AS levels_name,
+    levels.color AS levels_color
+FROM 
+    services 
+INNER JOIN 
+    category ON services.category_id = category.id
+INNER JOIN 
+    levels ON services.priority_level_id = levels.id
+INNER JOIN 
+    customer ON services.customer_id = customer.id;
            `
 
            console.log(services)
@@ -22,18 +34,25 @@ class ServicesController {
 
     async create(request: Request, response: Response) {
        try {
-        const { customer, subject, description, status } = request.body
+        const { user, subject, description, status, priorityLevel, category, customer} = request.body
 
         if(!subject) {
-            return response.status(500).json({ error: 'Erro ao criar serviço.' });
+            return response.status(500).json({ error: 'Erro ao criar serviço. Colocar assunto' });
         }
 
-        const services = await sql.default`
-        INSERT INTO services (user_id, subject, description, status)
-        VALUES (${customer}, ${subject}, ${description}, ${status})
+        await sql.default`
+        INSERT INTO services (user_id, subject, description, status, priority_level_id, category_id, customer_id)
+        VALUES (${user}, ${subject}, ${description}, ${status}, ${priorityLevel}, ${category}, ${customer})
          `;
- 
-        return response.status(201).json(services)
+
+         const allServices = await sql.default`
+         SELECT services.subject, services.description, services.status, category.name AS category_name, levels.name AS levels_name
+          FROM services 
+          INNER JOIN category ON services.category_id = category.id
+          INNER JOIN levels ON services.priority_level_id = levels.id
+        `
+        
+        return response.status(201).json(allServices)
        } catch (error) {
         return response.status(500).json({ error: 'Erro ao criar serviço' });
        }
