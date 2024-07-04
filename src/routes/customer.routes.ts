@@ -7,8 +7,8 @@ const customersRoutes = Router()
 
 const customersController = new CustomersController()
 
-customersRoutes.get("/", customersController.show)
-customersRoutes.post("/", customersController.create)
-customersRoutes.put("/:id", customersController.update)
+customersRoutes.get("/", userIsAuthenticated, customersController.show)
+customersRoutes.post("/", userIsAuthenticated, customersController.create)
+customersRoutes.put("/:id", userIsAuthenticated, customersController.update)
 
 module.exports = customersRoutes
