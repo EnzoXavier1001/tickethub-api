@@ -25,6 +25,7 @@ INNER JOIN
            `
 
            console.log(services)
+           console.log(request.userId + 'fez autenticação')
 
            return response.status(200).json(services)   
         } catch (error) {
