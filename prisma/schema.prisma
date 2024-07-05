@@ -9,9 +9,10 @@ datasource db {
 }
 
 model category {
-  id         Int   @id @default(autoincrement())
-  created_at DateTime @default(now()) @db.Timestamptz(6)
-  name       String?  @db.VarChar
+  id         Int         @id @default(autoincrement())
+  created_at DateTime    @default(now()) @db.Timestamptz(6)
+  name       String?     @db.VarChar
+  services   services[]  @relation("CategoryServices")
 }
 
 model customer {
@@ -19,34 +20,40 @@ model customer {
   name     String     @db.VarChar(255)
   cnpj     String     @unique @db.VarChar(14)
   address  String?    @db.VarChar(255)
-  services services[]
+  services services[] @relation("CustomerServices")
 }
 
 model levels {
-  id         Int   @id @default(autoincrement())
-  created_at DateTime @default(now()) @db.Timestamptz(6)
-  name       String?  @db.VarChar
+  id         Int         @id @default(autoincrement())
+  created_at DateTime    @default(now()) @db.Timestamptz(6)
+  name       String?     @db.VarChar
   color      String?
+  services   services[]  @relation("LevelServices")
 }
 
 model services {
-  id                Int    @id @default(autoincrement())
+  id                Int       @id @default(autoincrement())
   created_at        DateTime  @default(now()) @db.Timestamptz(6)
   subject           String?   @db.VarChar
   description       String?   @db.VarChar
   updated_at        DateTime? @default(now()) @db.Timestamptz(6)
   status            Decimal?  @default(0) @db.Decimal
-  user_id           Int?
-  category_id       Int?
-  priority_level_id Int?
+  user_id           Int
+  category_id       Int
+  priority_level_id Int
   customer_id       Int
-  customer          customer  @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_customer")
+
+  customer          customer  @relation("CustomerServices", fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_customer")
+  user              users    @relation("UserServices", fields: [user_id], references: [id])
+  category          category @relation("CategoryServices", fields: [category_id], references: [id])
+  level             levels   @relation("LevelServices", fields: [priority_level_id], references: [id])
 }
 
 model users {
-  id         Int   @id @default(autoincrement())
-  created_at DateTime @default(now()) @db.Timestamptz(6)
-  name       String?  @db.VarChar
-  email      String?  @unique @db.VarChar
-  password   String?  @db.VarChar
+  id         Int         @id @default(autoincrement())
+  created_at DateTime    @default(now()) @db.Timestamptz(6)
+  name       String?     @db.VarChar
+  email      String?     @unique @db.VarChar
+  password   String?     @db.VarChar
+  services   services[]  @relation("UserServices")
 }

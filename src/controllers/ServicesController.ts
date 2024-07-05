@@ -1,31 +1,33 @@
+import { PrismaClient } from '@prisma/client'
 import { Request, Response } from "express";
-
-const sql = require("../database/db")
+const prisma = new PrismaClient()
 
 class ServicesController {
     async show(request: Request, response: Response) {
         try {
-           const services = await sql.default`
-              SELECT 
-    services.subject, 
-    services.description, 
-    services.status, 
-    category.name AS category_name, 
-    customer.name AS customer_name, 
-    levels.name AS levels_name,
-    levels.color AS levels_color
-FROM 
-    services 
-INNER JOIN 
-    category ON services.category_id = category.id
-INNER JOIN 
-    levels ON services.priority_level_id = levels.id
-INNER JOIN 
-    customer ON services.customer_id = customer.id;
-           `
-
-           console.log(services)
-           console.log(request.userId + 'fez autenticação')
+            const services = await prisma.services.findMany({
+                select: {
+                    subject: true,
+                    description: true,
+                    status: true,
+                    customer: {
+                       select: {
+                            name: true
+                       }
+                    },
+                    category: {
+                        select: {
+                            name: true
+                        }
+                    },
+                    level: {
+                        select: {
+                            color: true,
+                            name: true
+                        }
+                    }
+                }
+            })
 
            return response.status(200).json(services)   
         } catch (error) {
@@ -41,19 +43,19 @@ INNER JOIN
             return response.status(500).json({ error: 'Erro ao criar serviço. Colocar assunto' });
         }
 
-        await sql.default`
-        INSERT INTO services (user_id, subject, description, status, priority_level_id, category_id, customer_id)
-        VALUES (${user}, ${subject}, ${description}, ${status}, ${priorityLevel}, ${category}, ${customer})
-         `;
+        const services = await prisma.services.create({
+            data: {
+                subject,
+                description,
+                status,
+                user_id: user,
+                category_id: category,
+                priority_level_id: priorityLevel,
+                customer_id: customer
+            }
+        })
 
-         const allServices = await sql.default`
-         SELECT services.subject, services.description, services.status, category.name AS category_name, levels.name AS levels_name
-          FROM services 
-          INNER JOIN category ON services.category_id = category.id
-          INNER JOIN levels ON services.priority_level_id = levels.id
-        `
-        
-        return response.status(201).json(allServices)
+        return response.status(201).json(services)
        } catch (error) {
         return response.status(500).json({ error: 'Erro ao criar serviço' });
        }
@@ -61,18 +63,19 @@ INNER JOIN
 
     async update(request: Request, response: Response) {
         try {
-            const { subject, description, status } = request.body
-            const { id } = request.params
-            
-            const services = await sql.default`
-               UPDATE services
-               SET subject = ${subject}, description = ${description}, status = ${status}
-               WHERE id = ${id}
-            `
-
-            return response.status(200).json(services)
+            const { id } = request.params;
+    
+            const services = await prisma.services.update({
+                data: request.body,
+                where: {
+                    id: Number(id)
+                }
+            });
+    
+            return response.status(200).json(services);
         } catch (error) {
-            
+            console.log(error)
+            return response.status(500).json({ error: 'Erro ao atualizar o serviço' });
         }
     }
 }
