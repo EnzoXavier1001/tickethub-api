@@ -1,11 +1,12 @@
+import { PrismaClient } from "@prisma/client";
 import { Request, Response } from "express";
 
-const sql = require("../database/db")
+const prisma = new PrismaClient()
 
 class CategoriesController {
     async show(request: Request, response: Response) {
         try {
-            const categories = await sql.default`SELECT * FROM category`
+            const categories = await prisma.category.findMany()
 
             return response.status(200).json(categories)
         } catch (error) {
@@ -17,7 +18,11 @@ class CategoriesController {
         try {
             const { name } = request.body
 
-            const category = await sql.default`INSERT INTO category (name) VALUES (${name})`
+            const category = await prisma.category.create({
+                data: {
+                    name
+                }
+            })
 
             return response.status(201).json(category)
         } catch (error) {
